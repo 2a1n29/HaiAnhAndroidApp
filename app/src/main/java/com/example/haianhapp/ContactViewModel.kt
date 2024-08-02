@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class ContactViewModel(private val repository: ContactRepository): ViewModel() {
 
@@ -13,7 +15,8 @@ class ContactViewModel(private val repository: ContactRepository): ViewModel() {
 
     fun addContact(image: String, name: String, phoneNumber: String, email: String){
         viewModelScope.launch {
-            val contact = Contact(0, image = image, name = name, phoneNumber = phoneNumber, email = email)
+            val contact = Contact(0, image = image, name = name, phoneNumber = phoneNumber, email = email, addedDate = LocalDate.now().format(
+                DateTimeFormatter.ofPattern("dd-MM-yyyy")))
             repository.insert(contact)
         }
     }

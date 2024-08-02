@@ -427,6 +427,22 @@ fun ContactDetailScreen(contact: Contact, viewModel: ContactViewModel, navContro
                             Text(contact.email, fontSize = 16.sp)
                         }
                     }
+                    Card(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                        colors = CardDefaults.cardColors(Color.White),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(8.dp)
+                    ) {
+                        Row(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Text("Added date: ", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(contact.addedDate, fontSize = 16.sp)
+                        }
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
