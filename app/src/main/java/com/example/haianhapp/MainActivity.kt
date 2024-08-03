@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -67,7 +68,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import coil.compose.rememberAsyncImagePainter
+import com.example.haianhapp.database.ContactDatabase
+import com.example.haianhapp.model.Contact
+import com.example.haianhapp.model.User
+import com.example.haianhapp.repository.ContactRepository
+import com.example.haianhapp.repository.UserRepository
 import com.example.haianhapp.ui.theme.BlueJC
+import com.example.haianhapp.viewmodel.ContactViewModel
+import com.example.haianhapp.viewmodel.ContactViewModelFactory
+import com.example.haianhapp.viewmodel.UserViewModel
+import com.example.haianhapp.viewmodel.UserViewModelFactory
 import java.io.File
 import java.io.FileOutputStream
 
@@ -75,17 +85,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val database = Room.databaseBuilder(applicationContext,ContactDatabase::class.java,"contact_database").build()
+        val database = Room.databaseBuilder(applicationContext, ContactDatabase::class.java,"contact_database").build()
 
         val repository = ContactRepository(database.contactDao())
 
         val viewModel: ContactViewModel by viewModels { ContactViewModelFactory(repository) }
 
+        val userRepository = UserRepository(database.userDao())
+
+        val userViewModel: UserViewModel by viewModels { UserViewModelFactory(userRepository) }
+
         setContent {
             val navController = rememberNavController()
             NavHost(navController = navController, startDestination = "contactList" ) {
                 composable("contactList"){
-                    ContactListScreen(viewModel = viewModel, navController = navController)
+                    ContactListScreen(viewModel = viewModel, navController = navController, userViewModel = userViewModel)
                 }
                 composable("addContact"){
                     AddContactScreen(viewModel = viewModel, navController = navController)
@@ -103,6 +117,12 @@ class MainActivity : ComponentActivity() {
                     val contactId = backStackEntry.arguments?.getString("contactId")?.toInt()
                     val contact = viewModel.allContacts.observeAsState(initial = emptyList()).value.find {it.id == contactId }
                     contact?.let { EditContactScreen(contact = it, viewModel = viewModel, navController = navController) }
+                }
+                composable("editGreetingCard/{userId}"){
+                    backStackEntry ->
+                    val userId = backStackEntry.arguments?.getString("userId")?.toInt()
+                    val user = userViewModel.allUsers.observeAsState(initial = listOf(User(0,"Hai Anh","Hello World!"))).value.find {it.id == userId }
+                    user?.let { EditGreetingCard(user = it, userViewModel = userViewModel, navController = navController) }
                 }
             }
         }
@@ -137,7 +157,7 @@ fun ContactItem(contact: Contact, onClick: () -> Unit){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContactListScreen(viewModel: ContactViewModel, navController: NavController){
+fun ContactListScreen(viewModel: ContactViewModel, navController: NavController, userViewModel: UserViewModel){
 
     val context = LocalContext.current.applicationContext
 
@@ -170,11 +190,16 @@ fun ContactListScreen(viewModel: ContactViewModel, navController: NavController)
         }
     ) { paddingValues ->
         val contacts by viewModel.allContacts.observeAsState(initial = emptyList())
-        LazyColumn(modifier = Modifier.padding(paddingValues)) {
-            items(contacts){
-                contact ->
-                ContactItem(contact = contact) {
-                    navController.navigate("contactDetail/${contact.id}")
+        val users by userViewModel.allUsers.observeAsState(initial = listOf(User(0,"Hai Anh","Hello World!")))
+        Column(modifier = Modifier.padding(paddingValues)) {
+            GreetingCard(user = users[0]) {
+                navController.navigate("editGreetingCard/${users[0].id}")
+            }
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(contacts) { contact ->
+                    ContactItem(contact = contact) {
+                        navController.navigate("contactDetail/${contact.id}")
+                    }
                 }
             }
         }
@@ -593,6 +618,109 @@ fun EditContactScreen(contact: Contact, viewModel: ContactViewModel, navControll
                 }
             }, colors = ButtonDefaults.buttonColors(BlueJC)) {
                 Text(text = "Save changes")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GreetingCard(user: User, onClick: () -> Unit) {
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+        colors = CardDefaults.cardColors(Color.White),
+        elevation = CardDefaults.cardElevation(4.dp),
+        onClick = onClick){
+        Text(text = user.name, fontSize = 30.sp)
+        Text(text = user.greeting, fontSize = 30.sp)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditGreetingCard(user: User, userViewModel: UserViewModel, navController: NavController){
+
+    val context = LocalContext.current.applicationContext
+
+    var userName by remember {
+        mutableStateOf(user.name)
+    }
+    var greeting by remember {
+        mutableStateOf(user.greeting)
+    }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                modifier = Modifier.height(48.dp),
+                title = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .wrapContentHeight(Alignment.CenterVertically)
+                    ) {
+                        Text(text = "Edit User", fontSize = 18.sp)
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { Toast.makeText(context, "Edit", Toast.LENGTH_SHORT).show() }) {
+                        Icon(painter = painterResource(id = R.drawable.editcontact), contentDescription = null)
+                    }
+                }, colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = BlueJC,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
+            )
+        }
+    ) {paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(paddingValues)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+            TextField(
+                value = userName,
+                onValueChange = {userName = it},
+                label = {Text(text = "Change the user name")},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp)),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextField(
+                value = greeting,
+                onValueChange = {greeting = it},
+                label = {Text(text = "Change the greeting message")},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp)),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = {
+                val updateUser = user.copy(name = userName, greeting = greeting)
+                userViewModel.updateUser(updateUser)
+                navController.navigate("contactList"){
+                    popUpTo(0)
+                }
+            }, colors = ButtonDefaults.buttonColors(BlueJC)) {
+                Text(text = "Update message")
             }
         }
     }

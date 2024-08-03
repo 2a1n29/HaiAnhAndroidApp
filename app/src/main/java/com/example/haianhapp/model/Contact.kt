@@ -1,4 +1,4 @@
-package com.example.haianhapp
+package com.example.haianhapp.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

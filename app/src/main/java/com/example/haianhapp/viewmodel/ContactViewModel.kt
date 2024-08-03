@@ -1,10 +1,12 @@
-package com.example.haianhapp
+package com.example.haianhapp.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import com.example.haianhapp.model.Contact
+import com.example.haianhapp.repository.ContactRepository
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

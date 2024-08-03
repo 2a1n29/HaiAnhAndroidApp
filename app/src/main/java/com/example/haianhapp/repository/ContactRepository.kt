@@ -1,5 +1,7 @@
-package com.example.haianhapp
+package com.example.haianhapp.repository
 
+import com.example.haianhapp.dao.ContactDao
+import com.example.haianhapp.model.Contact
 import kotlinx.coroutines.flow.Flow
 
 class ContactRepository(private val contactDao: ContactDao) {
