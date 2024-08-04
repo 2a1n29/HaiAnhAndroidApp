@@ -1,7 +1,6 @@
 package com.example.haianhapp.repository
 
 import com.example.haianhapp.dao.UserDao
-import com.example.haianhapp.model.Contact
 import com.example.haianhapp.model.User
 import kotlinx.coroutines.flow.Flow
 
