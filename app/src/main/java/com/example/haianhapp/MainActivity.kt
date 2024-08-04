@@ -62,6 +62,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -78,6 +79,7 @@ import com.example.haianhapp.viewmodel.ContactViewModel
 import com.example.haianhapp.viewmodel.ContactViewModelFactory
 import com.example.haianhapp.viewmodel.UserViewModel
 import com.example.haianhapp.viewmodel.UserViewModelFactory
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
@@ -94,6 +96,14 @@ class MainActivity : ComponentActivity() {
         val userRepository = UserRepository(database.userDao())
 
         val userViewModel: UserViewModel by viewModels { UserViewModelFactory(userRepository) }
+
+        lifecycleScope.launch {
+            val allUsers = userViewModel.allUsers.value
+            if (allUsers.isNullOrEmpty()) {
+                val user = User(id = 0, name = "Hai Anh", greeting = "Hello World !")
+                userRepository.insert(user)
+            }
+        }
 
         setContent {
             val navController = rememberNavController()
@@ -121,7 +131,7 @@ class MainActivity : ComponentActivity() {
                 composable("editGreetingCard/{userId}"){
                     backStackEntry ->
                     val userId = backStackEntry.arguments?.getString("userId")?.toInt()
-                    val user = userViewModel.allUsers.observeAsState(initial = listOf(User(0,"Hai Anh","Hello World!"))).value.find {it.id == userId }
+                    val user = userViewModel.allUsers.observeAsState(initial = mutableListOf(User(0,"Hai Anh","Hello World !"))).value.find {it.id == userId }
                     user?.let { EditGreetingCard(user = it, userViewModel = userViewModel, navController = navController) }
                 }
             }
@@ -190,7 +200,7 @@ fun ContactListScreen(viewModel: ContactViewModel, navController: NavController,
         }
     ) { paddingValues ->
         val contacts by viewModel.allContacts.observeAsState(initial = emptyList())
-        val users by userViewModel.allUsers.observeAsState(initial = listOf(User(0,"Hai Anh","Hello World!")))
+        val users by userViewModel.allUsers.observeAsState(initial =  mutableListOf(User(0,"Hai Anh","Hello World !")))
         Column(modifier = Modifier.padding(paddingValues)) {
             GreetingCard(user = users[0]) {
                 navController.navigate("editGreetingCard/${users[0].id}")
