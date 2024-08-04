@@ -636,14 +636,34 @@ fun EditContactScreen(contact: Contact, viewModel: ContactViewModel, navControll
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GreetingCard(user: User, onClick: () -> Unit) {
-    Card(modifier = Modifier
-        .fillMaxWidth()
-        .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
-        colors = CardDefaults.cardColors(Color.White),
-        elevation = CardDefaults.cardElevation(4.dp),
-        onClick = onClick){
-        Text(text = user.name, fontSize = 30.sp)
-        Text(text = user.greeting, fontSize = 30.sp)
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
+        elevation = CardDefaults.cardElevation(8.dp),
+        onClick = onClick
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = user.name,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1E88E5),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = user.greeting,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color(0xFF64B5F6),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
     }
 }
 
